@@ -61,6 +61,7 @@ socket.on("join_room",async ({userId,roomId})=>{
         socket.join(room._id.toString())
         room.players.push(userId)
         await room.save()
+        await UserCollection.findByIdAndUpdate(userId,{$set:{room:room._id}})
         // send all updated rooms data
         const rooms = await RoomCollection.find().populate("players")
         io.emit("room_created", rooms)
@@ -78,7 +79,7 @@ socket.on("join_room",async ({userId,roomId})=>{
 socket.on("leave_room",async ({userId, roomId})=>{
     console.log("leave",roomId,userId)
     const room = await RoomCollection.findByIdAndUpdate(roomId,{$pull:{players:userId}},{new:true})
-    const user = await UserCollection.findByIdAndUpdate(userId,{$unset:{room:null}})
+    const user = await UserCollection.findByIdAndUpdate(userId,{room:null})
     socket.leave(roomId)
  // send all updated rooms data
  const rooms = await RoomCollection.find().populate("players")
@@ -91,18 +92,21 @@ socket.on("leave_room",async ({userId, roomId})=>{
 // _____________________________________________________________________
   socket.on("disconnect",async()=>{
     console.log(`user disconnected ${socket.id}`)
-/* 
+
     const user = await UserCollection.findOne({socketId:socket.id})
+    
     if(user){
+        console.log(user.firstName)
         const room = await RoomCollection.findByIdAndUpdate(user.room, {$pull:{players:user._id}},{new:true})
         user.socketId=null;
         user.room=null;
         await user.save()
-    } */
+         // send all updated rooms data
+  const rooms = await RoomCollection.find().populate("players")
+  io.emit("room_created", rooms)
+    }
 
- // send all updated rooms data
-/*  const rooms = await RoomCollection.find().populate("players")
- io.emit("room_created", rooms) */
+
 
   })
 });

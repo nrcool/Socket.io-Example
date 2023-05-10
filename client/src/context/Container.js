@@ -13,6 +13,7 @@ export default function Container({children}) {
 console.log(socket.id)
     useEffect(()=>{
         const allRooms=(rooms)=>{
+            console.log("working")
             setRooms(rooms)
         }
 
